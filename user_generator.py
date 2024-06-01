@@ -24,6 +24,7 @@ class Generator():
             for user in users:
 
                 user_data = {
+                    "id" : user['login']['uuid'],
                     "title": user['name']['title'],
                     "firstName": user['name']['first'],
                     "lastName": user['name']['last'],
@@ -33,6 +34,7 @@ class Generator():
                     "state": user['location']['state'],
                     "country": user['location']['country'],
                     "postal_code": user['location']['postcode'],
+                    "photo_url": user['picture']['large']
                 }
 
                 yield user_data

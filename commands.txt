@@ -1,0 +1,9 @@
+
+
+# kafka commands
+
+## list topics 
+kafka-topics --list --bootstrap-server kafka:9092
+
+## create topics 
+kafka-topics --create --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 --topic votes-topic

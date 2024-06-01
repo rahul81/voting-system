@@ -13,6 +13,7 @@ DATA_PATH = './data'
 OUTPUT_CSV_PATH = f"{DATA_PATH}/voters.csv"
 
 csv_header = [
+    "id",
     "title",
     "firstName",
     "lastName",
@@ -21,7 +22,8 @@ csv_header = [
     "city",
     "state",
     "country",
-    "postal_code"
+    "postal_code",
+    "voter_photo_url"
     ]
 
 
