@@ -50,15 +50,66 @@ voters_joined_df = votes_stream_df.join(candidates_df, votes_stream_df.voted_to=
 print(voters_joined_df.printSchema())
 
 
-votes_per_candidates = voters_joined_df.groupby('candidate_id','candidate_name','party').count().alias('total_votes')
+votes_per_candidates = voters_joined_df.groupby('candidate_id','candidate_name','party').agg(F.count("*").alias('total_votes'))
 
+votes_by_location = votes_stream_df.groupby('state').agg(F.count("*").alias('total_votes'))
+
+votes_by_gender = voters_joined_df.groupby('gender').agg(F.count("*").alias('total_votes'))
+
+# (votes_per_candidates
+#  .writeStream
+#  .outputMode('complete')
+#  .format('console')
+#  .start()
+#  .awaitTermination())
+
+# (votes_by_location
+#  .writeStream
+#  .outputMode('complete')
+#  .format('console')
+#  .start()
+#  .awaitTermination())
+
+## write to a kafka topic
+
+votes_per_candidates = votes_per_candidates.select(F.to_json(F.struct('*')).alias('value'))
 
 (votes_per_candidates
  .writeStream
- .outputMode('complete')
- .format('console')
+ .format('kafka')
+ .option("kafka.bootstrap.servers", "localhost:9092") 
+ .outputMode('update')
+ .option('topic', 'votes_per_candidate')
+ .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
  .start()
  .awaitTermination())
 
+# (votes_by_location
+#  .writeStream
+#  .format('kafka')
+#  .option("kafka.bootstrap.servers", "localhost:9092") 
+#  .outputMode('update')
+#  .option('topic', 'votes_by_location')
+#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+#  .start()
+#  .awaitTermination())
 
+# (votes_by_gender
+#  .writeStream
+#  .format('kafka')
+#  .option("kafka.bootstrap.servers", "localhost:9092") 
+#  .outputMode('update')
+#  .option('topic', 'votes_by_gender')
+#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+#  .start()
+#  .awaitTermination())
+
+
+
+
+
+# more dimensions 
+# votes turnout by age bucket
+# votes turnout by gender
+# 
 
