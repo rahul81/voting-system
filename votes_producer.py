@@ -56,8 +56,8 @@ for e, row in enumerate(voters_reader):
     time.sleep(2)
 
 
-    if (e+1)%10 == 0:
-        break
+    # if (e+1)%2 == 0:
+    #     break
 
     
 
