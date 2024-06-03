@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from kafka import KafkaConsumer
 import json
+from collections import OrderedDict
 
 def create_kafka_consumer(topic_name):
     # Set up a Kafka consumer with specified topic and configurations
@@ -26,26 +27,43 @@ def read_from_kafka_topic(consumer):
 
 consumer = create_kafka_consumer('votes_per_candidate')
 
+# read static candidates data
+candidates_data = pd.read_csv('data/candidates.csv')
+
+candidates_dict = OrderedDict({})
+leading_candidate_id = None
+leading_candidate_photo_url = ''
+majority_votes = -1
+
+
+for row in candidates_data[['candidate_id','candidate_name','party']].itertuples():
+
+    candidates_dict[row[1]] = {'name':row[2], 'party':row[3], 'votes':0}
+
+candidates_list = [ value['name'] for key, value in candidates_dict.items()]
 
 app = Dash()
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['https://cdn.tailwindcss.com']
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = [
-        html.Div([
+        html.Div( children=[
             dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
+            interval=2*1000, # in milliseconds
             n_intervals=0
         )
         ]),
         html.Div(className='row', children='Realtime Voting feed',style={'textAlign':'center', 'fontSize':30, 'backgroundColor':'lightblue'}),
-        html.Div(className='row', children=[
-            html.Div(className='six columns',id='live-leading-candidate'),
-            dcc.Graph(className='six columns',id='live-update-graph')
-
-        ])
+        html.Div(
+            style={'display':'flex', 'backgroundColor':'black', 'justifyContent':'center'},
+            children=[html.Div( style={'display':'flex', 'width':'80%', 'backgroundColor':'white' ,'justifyContent':'center'},children=[
+            html.Div(className='',id='live-leading-candidate',style={'textAlign':'center', 'width':'40%'}),
+            dcc.Graph(className='',id='live-update-graph')
+        ])]
+        )
+        
     ]
 
 
@@ -54,28 +72,55 @@ app.layout = [
 @callback([Output('live-update-graph','figure'), Output('live-leading-candidate','children')],Input('interval-component','n_intervals'))
 def update_votes_per_candidate(n):
 
+    global majority_votes
+    global leading_candidate_id
+    global leading_candidate_photo_url
+
     data = read_from_kafka_topic(consumer)
     results = pd.DataFrame(data)
 
-    # use all candidate names as x axis from static data
-    # store previous values and update only the new value in graph 
+    # update the total votes in candidates dict data to keep track of total votes for each candidate
+    if len(results) > 0:
+        for row in results[['candidate_id','total_votes', 'photo_url']].itertuples():
 
-    print("results >> \n", results)
+            candidate_id = row[1]
+            votes = row[2]
+            candidates_dict[candidate_id]['votes'] = votes
 
-    fig = px.bar(
-        results, 'candidate_name', 'total_votes'
+            if votes > majority_votes:
+                majority_votes = votes
+                leading_candidate_id = candidate_id
+                leading_candidate_photo_url = row[3]
+        
+    votes_data = [value['votes'] for key, value in candidates_dict.items()]
+
+    fig = go.Figure(
+        data = go.Bar(
+            x = candidates_list,
+            y = votes_data,
+        ),
+        layout=go.Layout(
+        title=go.layout.Title(text="Votes per candidate"),
+    )
     )
 
-        # Identify the leading candidate
-    results = results.loc[results.groupby('candidate_id')['total_votes'].idxmax()]
-    leading_candidate = results.loc[results['total_votes'].idxmax()]
+    fig.update_layout(
+        title_x=0.5,
+        title_y=0.85,
+        xaxis_title='Candidates',
+        yaxis_title='Total Votes',
+        font=dict(
+            # family="Courier New, monospace",
+            # size=18,
+            # color="RebeccaPurple"
+        )
+        )
 
-    results = results[['candidate_id', 'candidate_name', 'party','total_votes']]
-    results = results.reset_index(drop=True)
-
-    leading_candidate_component = html.Div([
-        html.H4(leading_candidate['candidate_name']),
-        html.H3(leading_candidate['party'])
+    leading_candidate_component = html.Div(style={'marginTop':'80px'},children= [
+        html.Img(src=leading_candidate_photo_url, width='50%'),
+        html.H4("Leading Candidate : "+ candidates_dict[leading_candidate_id]['name']),
+        html.H3("Party : " + candidates_dict[leading_candidate_id]['party']),
+        
     ])
 
 

@@ -50,7 +50,7 @@ voters_joined_df = votes_stream_df.join(candidates_df, votes_stream_df.voted_to=
 print(voters_joined_df.printSchema())
 
 
-votes_per_candidates = voters_joined_df.groupby('candidate_id','candidate_name','party').agg(F.count("*").alias('total_votes'))
+votes_per_candidates = voters_joined_df.groupby('candidate_id','candidate_name','party','photo_url').agg(F.count("*").alias('total_votes'))
 
 votes_by_location = votes_stream_df.groupby('state').agg(F.count("*").alias('total_votes'))
 
