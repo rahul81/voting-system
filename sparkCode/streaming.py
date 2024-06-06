@@ -84,25 +84,25 @@ votes_per_candidates = votes_per_candidates.select(F.to_json(F.struct('*')).alia
  .start()
  .awaitTermination())
 
-# (votes_by_location
-#  .writeStream
-#  .format('kafka')
-#  .option("kafka.bootstrap.servers", "localhost:9092") 
-#  .outputMode('update')
-#  .option('topic', 'votes_by_location')
-#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
-#  .start()
-#  .awaitTermination())
+(votes_by_location
+ .writeStream
+ .format('kafka')
+ .option("kafka.bootstrap.servers", "localhost:9092") 
+ .outputMode('update')
+ .option('topic', 'votes_by_location')
+ .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+ .start()
+ .awaitTermination())
 
-# (votes_by_gender
-#  .writeStream
-#  .format('kafka')
-#  .option("kafka.bootstrap.servers", "localhost:9092") 
-#  .outputMode('update')
-#  .option('topic', 'votes_by_gender')
-#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
-#  .start()
-#  .awaitTermination())
+(votes_by_gender
+ .writeStream
+ .format('kafka')
+ .option("kafka.bootstrap.servers", "localhost:9092") 
+ .outputMode('update')
+ .option('topic', 'votes_by_gender')
+ .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+ .start()
+ .awaitTermination())
 
 
 
