@@ -25,7 +25,8 @@ def read_from_kafka_topic(consumer):
             data.append(sub_message.value)
     return data
 
-consumer = create_kafka_consumer('votes_per_candidate')
+votes_per_candidate_consumer = create_kafka_consumer('votes_per_candidate')
+
 
 # read static candidates data
 candidates_data = pd.read_csv('data/candidates.csv')
@@ -60,7 +61,14 @@ app.layout = [
             style={'display':'flex', 'backgroundColor':'black', 'justifyContent':'center'},
             children=[html.Div( style={'display':'flex', 'width':'80%', 'backgroundColor':'white' ,'justifyContent':'center'},children=[
             html.Div(className='',id='live-leading-candidate',style={'textAlign':'center', 'width':'40%'}),
-            dcc.Graph(className='',id='live-update-graph')
+            dcc.Graph(className='',id='live-votes-per-candidate-bar-graph')
+        ])]
+        ),
+        html.Div(
+            style={'display':'flex', 'backgroundColor':'black', 'justifyContent':'center'},
+            children=[html.Div( style={'display':'flex', 'width':'80%', 'backgroundColor':'white' ,'justifyContent':'center'},children=[
+            dcc.Graph(className='',id='live-votes-by-state-graph'),
+            dcc.Graph(className='',id='live-votes-by-gender-graph')
         ])]
         )
         
@@ -69,14 +77,14 @@ app.layout = [
 
 
 
-@callback([Output('live-update-graph','figure'), Output('live-leading-candidate','children')],Input('interval-component','n_intervals'))
+@callback([Output('live-votes-per-candidate-bar-graph','figure'), Output('live-leading-candidate','children')],Input('interval-component','n_intervals'))
 def update_votes_per_candidate(n):
 
     global majority_votes
     global leading_candidate_id
     global leading_candidate_photo_url
 
-    data = read_from_kafka_topic(consumer)
+    data = read_from_kafka_topic(votes_per_candidate_consumer)
     results = pd.DataFrame(data)
 
     # update the total votes in candidates dict data to keep track of total votes for each candidate
