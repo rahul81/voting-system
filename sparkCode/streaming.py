@@ -52,10 +52,10 @@ print(voters_joined_df.printSchema())
 
 votes_per_candidates = voters_joined_df.groupby('candidate_id','candidate_name','party','photo_url').agg(F.count("*").alias('total_votes'))
 
-votes_by_state = votes_stream_df.groupby('state').agg(F.count("*").alias('total_votes'))
-votes_by_city = votes_stream_df.groupby('city').agg(F.count("*").alias('total_votes'))
+votes_per_candidates_by_gender = voters_joined_df.groupby('candidate_id','gender').agg(F.count("*").alias('total_votes'))
 
-votes_by_gender = voters_joined_df.groupby('gender').agg(F.count("*").alias('total_votes'))
+votes_by_gender = voters_joined_df.groupby('gender').agg(F.count('*').alias('total_votes')).select(F.to_json(F.struct('*')).alias('value'))
+
 
 # (votes_per_candidates
 #  .writeStream
@@ -75,49 +75,60 @@ votes_by_gender = voters_joined_df.groupby('gender').agg(F.count("*").alias('tot
 
 votes_per_candidates = votes_per_candidates.select(F.to_json(F.struct('*')).alias('value'))
 
-(votes_per_candidates
+votes_per_candidates_sink = (votes_per_candidates
  .writeStream
  .format('kafka')
  .option("kafka.bootstrap.servers", "localhost:9092") 
  .outputMode('update')
  .option('topic', 'votes_per_candidate')
  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
- .start()
- .awaitTermination())
+ .start())
 
-(votes_by_state
+# (votes_by_state
+#  .writeStream
+#  .format('kafka')
+#  .option("kafka.bootstrap.servers", "localhost:9092") 
+#  .outputMode('update')
+#  .option('topic', 'votes_by_state')
+#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+#  .start()
+#  .awaitTermination())
+
+# (votes_by_city
+#  .writeStream
+#  .format('kafka')
+#  .option("kafka.bootstrap.servers", "localhost:9092") 
+#  .outputMode('update')
+#  .option('topic', 'votes_by_city')
+#  .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
+#  .start()
+#  .awaitTermination())
+
+votes_per_candidates_by_gender = votes_per_candidates_by_gender.select(F.to_json(F.struct('*')).alias('value'))
+
+votes_per_candidates_by_gender_sink = (votes_per_candidates_by_gender
  .writeStream
  .format('kafka')
  .option("kafka.bootstrap.servers", "localhost:9092") 
  .outputMode('update')
- .option('topic', 'votes_by_state')
- .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
- .start()
- .awaitTermination())
-
-(votes_by_city
- .writeStream
- .format('kafka')
- .option("kafka.bootstrap.servers", "localhost:9092") 
- .outputMode('update')
- .option('topic', 'votes_by_city')
- .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
- .start()
- .awaitTermination())
-
-(votes_by_gender
- .writeStream
- .format('kafka')
- .option("kafka.bootstrap.servers", "localhost:9092") 
- .outputMode('update')
- .option('topic', 'votes_by_gender')
- .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint")
- .start()
- .awaitTermination())
+ .option('topic', 'votes_per_candidates_by_gender')
+ .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint2")
+ .start())
 
 
+votes_by_gender_sink = (votes_by_gender
+                        .writeStream
+                        .format('kafka')
+                        .option("kafka.bootstrap.servers", "localhost:9092") 
+                        .outputMode('update')
+                        .option('topic', 'votes_by_gender')
+                        .option('checkpointLocation', "/Users/rahuldas/mySpace/w2023/03-projects/voting-system/sparkCode/checkpoint3")
+                        .start())
 
 
+votes_per_candidates_sink.awaitTermination()
+votes_per_candidates_by_gender_sink.awaitTermination()
+votes_by_gender_sink.awaitTermination()
 
 # more dimensions 
 # votes turnout by age bucket
