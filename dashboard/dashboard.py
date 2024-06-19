@@ -55,6 +55,9 @@ candidates_list = [ value['name'] for key, value in candidates_dict.items()]
 
 app = Dash()
 
+# font 
+# poppins , roboto
+
 external_stylesheets = ['https://cdn.tailwindcss.com']
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
@@ -62,15 +65,15 @@ app.layout = [
         html.Div( children=[
             dcc.Interval(
             id='interval-component',
-            interval=2*1000, # in milliseconds
+            interval=5*1000, # in milliseconds
             n_intervals=0
         )
         ]),
-        html.Div(className='row', children='Realtime Voting feed',style={'textAlign':'center', 'fontSize':30, 'backgroundColor':'lightblue'}),
+        html.Div(className='row', children='Realtime Voting feed',style={'textAlign':'center','font':'roboto regular','fontSize':30, 'backgroundColor':'lightblue'}),
         html.Div(
             style={'display':'flex', 'backgroundColor':'', 'justifyContent':'center'},
             children=[html.Div( style={'display':'flex', 'width':'80%', 'backgroundColor':'white' ,'justifyContent':'center'},children=[
-            html.Div(className='',id='live-leading-candidate',style={'textAlign':'center', 'width':'40%'}),
+            html.Div(className='',id='live-leading-candidate',style={'textAlign':'center', 'width':'40%','font':'poppins regular'}),
             dcc.Graph(className='',id='live-votes-per-candidate-bar-graph')
         ])]
         ),
